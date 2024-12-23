@@ -20,7 +20,11 @@
       }
     ],
     "baseUrl": ".",
-    "paths": {}
+    "paths": {
+      "@/*": ["./src/*"],
+      "@components/*": ["./src/components/*"],
+      "@fonts/*": ["./src/app/fonts/*"]
+    }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
   "exclude": ["node_modules"]
