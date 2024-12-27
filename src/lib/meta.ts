@@ -163,3 +163,42 @@ export function getFormResult(): FormResult {
 export function setFormResult(value: FormResult): void {
   formResult = value
 }
+
+export type MetricData = {
+  date_start: string
+  date_stop: string
+} & Partial<Record<MetricType, string | number>>
+
+export type AggregatedMetric = {
+  date_start: string
+  date_stop: string
+} & Record<MetricType, number>
+
+export function aggregateMetricsByDate(data: MetricData[]): AggregatedMetric[] {
+  const metrics = Object.keys(data[0]).filter((key) => key !== 'date_start' && key !== 'date_stop') as MetricType[]
+
+  const aggregated = data.reduce((acc, curr) => {
+    const dateKey = `${curr.date_start}-${curr.date_stop}`
+    if (!acc[dateKey]) {
+      acc[dateKey] = {
+        date_start: curr.date_start,
+        date_stop: curr.date_stop,
+        ...Object.fromEntries(metrics.map((metric) => [metric, 0])),
+      } as AggregatedMetric
+    }
+
+    metrics.forEach((metric) => {
+      if (curr[metric]) {
+        acc[dateKey][metric] += Number(curr[metric])
+      }
+    })
+
+    return acc
+  }, {} as Record<string, AggregatedMetric>)
+
+  return Object.values(aggregated).map((metric) => ({
+    ...metric,
+    ...(metric.spend && { spend: Number(metric.spend.toFixed(2)) }),
+    ...(metric.ctr && { ctr: Number(metric.ctr.toFixed(6)) }),
+  }))
+}

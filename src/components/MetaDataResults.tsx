@@ -1,20 +1,16 @@
-import { getFormResult, METRICS } from '@lib/meta'
-import formatChartData from '@lib/chart'
+import {
+  aggregateMetricsByDate,
+  FormResult, getFormResult, MetricData,
+} from '@lib/meta'
 import ResultsAlert from '@client/ResultsAlert'
 
 const MetaDataResults = () => {
-  const formResult = getFormResult()
-  console.log('Raw data:', formResult.data)
+  const formResult: FormResult = getFormResult()
 
   const formattedData = formResult.status === 'success' && formResult.data && formResult.query
-    ? formResult.query.metrics.reduce((acc, metric) => {
-      const chartData = formatChartData(formResult.data, metric)
-      console.log(`Formatted data for ${metric}:`, chartData)
-      return {
-        ...acc,
-        [metric]: chartData,
-      }
-    }, {})
+    ? aggregateMetricsByDate(
+      ('data' in formResult.data ? formResult.data.data : formResult.data) as MetricData[],
+    )
     : {}
 
   return (
