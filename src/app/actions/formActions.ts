@@ -41,7 +41,8 @@ export default async function handleFormSubmit(formData: FormData): Promise<void
     })
 
     if (!response.ok) {
-      throw new Error(`Failed to submit data: ${response.status}`)
+      const errorText = await response.text()
+      throw new Error(`Failed to submit form: ${errorText}`)
     }
 
     const data = await response.json()
