@@ -21,14 +21,14 @@ const PlatformTabs = () => (
       <Card>
         <CardHeader>
           <CardTitle>
-            Meta
+            Meta Analytics Dashboard
           </CardTitle>
           <CardDescription>
-            Analytics for Meta.
+            Visualize your chart insights with your Meta Marketing API parameter selection
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-2">
-          Meta Analytics
+          <MetaDataForm />
         </CardContent>
         <CardFooter>
           Meta Charts
