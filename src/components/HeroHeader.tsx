@@ -12,7 +12,7 @@ const inter = Inter({
 })
 
 const HeroHeader = () => (
-  <div className="flex flex-col items-center justify-center text-center py-20">
+  <div className="flex flex-col items-center justify-center text-center py-8">
     <h1 className={`${charlea.className} text-7xl`}>
       NewForm
     </h1>
