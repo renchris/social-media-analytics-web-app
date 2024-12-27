@@ -60,7 +60,11 @@ export const METRICS = [
   { label: 'Click-through Rate', value: 'ctr', description: 'Click-through rate (clicks/impressions)' },
   { label: 'Conversions', value: 'conversions', description: 'Number of conversions' },
   { label: 'Cost per Conversion', value: 'cost_per_conversion', description: 'Average cost per conversion' },
-  { label: 'Conversion Rate', value: 'conversion_rate', description: 'Conversion rate (conversions/clicks)' },
+  // {
+  //   label: 'Conversion Rate',
+  //   value: 'conversion_rate',
+  //   description: 'Conversion rate (conversions/clicks)',
+  // },
 ] as const
 
 export const BREAKDOWNS = [
