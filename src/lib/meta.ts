@@ -1,3 +1,5 @@
+import type { DateRange } from 'react-day-picker'
+
 export type MetricType = 'impressions' | 'spend' | 'clicks' | 'ctr' | 'conversions' | 'cost_per_conversion' | 'conversion_rate'
 
 export type BreakdownType = 'age' | 'gender' | 'country' | 'region' | 'dma' | 'impression_device' | 'platform_position' | 'publisher_platform'
@@ -31,13 +33,14 @@ export function setTimeIncrement(value: TimeIncrementType): void {
 export interface MetaDataItem {
   date_start: string
   date_stop: string
-  age: string
-  impressions: number
-  spend: number
-  clicks: number
-  ctr: number
-  conversions: number
-  cost_per_conversion: number
+  age?: string
+  gender?: string
+  impressions: string | number
+  spend: string | number
+  clicks: string | number
+  ctr: string | number
+  conversions: string | number
+  cost_per_conversion: string | number
 }
 
 export interface ChartDataPoint {
@@ -115,3 +118,44 @@ export const VALID_BREAKDOWN_COMBINATIONS: readonly BreakdownType[][] = [
   ['publisher_platform', 'impression_device'],
   ['publisher_platform', 'platform_position', 'impression_device'],
 ] as const
+
+export interface BaseMetaBodyParameters {
+  metrics: MetricType[]
+  breakdowns: BreakdownType[]
+  level: LevelType
+  timeIncrement: TimeIncrementType
+}
+
+export interface EnumDateRangeParameters extends BaseMetaBodyParameters {
+  dateRangeEnum: DateRangeEnumType
+  dateRange?: never
+}
+
+export interface CustomDateRangeParameters extends BaseMetaBodyParameters {
+  dateRange: DateRange
+  dateRangeEnum?: never
+}
+
+export type MetaBodyParameters = EnumDateRangeParameters | CustomDateRangeParameters
+
+export type FormResultStatus = 'idle' | 'success' | 'error'
+
+export interface FormResult {
+  status: FormResultStatus
+  data: MetaDataItem[] | null
+  message?: string
+  query?: MetaBodyParameters
+}
+
+let formResult: FormResult = {
+  status: 'idle',
+  data: null,
+}
+
+export function getFormResult(): FormResult {
+  return formResult
+}
+
+export function setFormResult(value: FormResult): void {
+  formResult = value
+}
