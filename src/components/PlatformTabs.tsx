@@ -5,7 +5,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from '@components/ui/card'
@@ -30,9 +29,6 @@ const PlatformTabs = () => (
         <CardContent className="space-y-2">
           <MetaDataForm />
         </CardContent>
-        <CardFooter>
-          Meta Charts
-        </CardFooter>
       </Card>
     </TabsContent>
     <TabsContent value="tiktok">
@@ -46,9 +42,6 @@ const PlatformTabs = () => (
         <CardContent className="space-y-2">
           TikTok Analytics
         </CardContent>
-        <CardFooter>
-          TikTok Charts
-        </CardFooter>
       </Card>
     </TabsContent>
   </Tabs>
