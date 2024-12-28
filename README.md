@@ -1,76 +1,63 @@
-<p align="center">
-  <a href="https://github.com/renchris/panda-boilerplate">
-    <img alt="Tailwind Logo" src="public/tailwind.png" width="60" />
-  </a>
-</p>
-<h1 align="center">
-  Tailwind Boilerplate
-</h1>
+# Social Media Analytics Web App
 
-A starter template that uses the NextJS App Router, TypeScript, and Tailwind CSS.
+Visualization tool for Meta Marketing API metrics with focus on server-side rendering and type safety.
 
-## 👍 NextJS App Router
+## Implementation Design Decisions
 
-The Next.js App Router is the current standard for building applications using React's latest features.
+### Form Actions
+Chose to utilize Next.js form actions for:
+- Single round trip for form submission
+- Maximizing server-side component usage
 
-The significant feature of Next.js App Router are [Server Components](https://nextjs.org/docs/app/building-your-application/rendering/server-components).
+Implementation details:
+- Custom server-compatible input components
+  - Checkbox/radio inputs with inner labels styled as buttons
+  - Values from name prop parameter instead of useState
+  - Enables non-JS buttons to be server components
+- Server-side state management
+  - Values stored in server-side file
+  - Avoided server action storage (server-side public API function called by client)
 
-- Previously, with the Pages Router, each of your pages are rendered on the client or the server.
+Considered tradeoffs:
+- Increased styling complexity without useState
+- Required dedicated submit button (no onChange/onClick submissions)
+- Form parameters reset on submit by design
+  - Not optimal for frequent parameter adjustments
+  - Acceptable for this use case
 
-- Currently, with the App Router, your components within each page can be rendered on the client or the server.
+### API Integration
+Chose direct server-side fetch over API Route Handler because:
+- Simple parameter-to-response transformation
+  - No complex server-side logic between parameters and response
+  - Logic handled in server-side file
+Chose direct server-side fetch over Server Actions because:
+- GET operation semantics
+  - Not a mutation operation
+  - Server actions would be sequential POST requests
+  - Server actions expose client-accessible endpoints
 
-This allows more of your application to receive the [benefits of server rendering](https://nextjs.org/docs/app/building-your-application/rendering/server-components#benefits-of-server-rendering).
+### Data Visualization
+Shadcn Charts (Recharts under the hood)implementation with:
+- Dynamic metric support
+  - Single and multiple metric views
+  - Automatic axis scaling
+- Breakdown capabilities
+  - Stacked area views
+  - Multi-axis support
 
-## 🚀 Usage
+## Tech Stack
+- Next.js App Router
+- TypeScript
+- Shadcn Components and Charts
+- Tailwind CSS
 
-First, install the dependencies:
-
+## Setup
 ```bash
+# Install dependencies
 pnpm install
+
+# Run dev server
+npm run dev
+
+# Run on localhost:3000 in browser
 ```
-
-Then, run the application:
-
-```bash
-pnpm dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-## 🎨 Code Style
-
-We use ESLint for our code style. You may modify the ESLint rule set in the `.eslintrc.js` file. Include ESLint On Save in your code editor Preferences settings.
-
-```JSON
-{
-    "editor.codeActionsOnSave": {
-        "source.fixAll.eslint": true
-    }
-}
-```
-
-See
-- [ESLint Rules](https://eslint.org/docs/latest/rules/)
-- [Airbnb ESLint Style Guide](https://github.com/airbnb/javascript)
-- [TypeScript ESLint Rules](https://typescript-eslint.io/rules/)
-
-
-## 🧐 What's inside?
-
-A quick look at the top-level files and directories where we made our feature changes in the project.
-
-    src
-    └── app
-         ├── layout.tsx
-         └── page.tsx
-    eslintrc.js
-
-1. **`/src/app`**: This directory will contain all of the code related to what you will see on the front-end of the site. `src` is a convention for “source code” and `app` is the convention for “app router”.
-
-1. **`src/app/layout.tsx`**: This file contains the Root Layout. The JSX elements in this file applies onto all routes with routes being `{children}`. See [NextJS Documentation: Layouts](https://nextjs.org/docs/app/building-your-application/routing/pages-and-layouts#layouts)
-
-1. **`src/app/page.tsx`**: This file contains the code for the front-end page. See [NextJS Documentation: Pages](https://nextjs.org/docs/app/building-your-application/routing/pages-and-layouts#pages)
-
-1. **`eslintrc.js`**: This file contains the ESLint rule configuration.
