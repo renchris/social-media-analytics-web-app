@@ -132,11 +132,25 @@ const getMetricLabel = (metric: MetricType | undefined) => {
   return metricLabels[metric] || metric
 }
 
+const getTimeIncrement = (data: FormattedMetricData[]) => {
+  if (data.length < 2) return 'time'
+
+  // Get first two dates to determine increment
+  const date1 = new Date(data[0].date_start)
+  const date2 = new Date(data[1].date_start)
+  const diffDays = Math.abs((date2.getTime() - date1.getTime()) / (1000 * 60 * 60 * 24))
+
+  if (diffDays >= 28) return 'monthly'
+  if (diffDays >= 7) return 'weekly'
+  return 'daily'
+}
+
 const AreaChartComponent = ({ data }: AreaChartProps) => {
   if (!data || data.length === 0) {
     return null
   }
 
+  const timeIncrement = getTimeIncrement(data)
   const allKeys = Object.keys(data[0]).filter((key) => !['date_start', 'date_stop'].includes(key))
   const hasBreakdown = allKeys.some((key) => key.includes('_'))
 
@@ -162,18 +176,43 @@ const AreaChartComponent = ({ data }: AreaChartProps) => {
   const metricLabel = getMetricLabel(baseMetric)
   const breakdownType = breakdownKeys[0]
 
+  const getChartTitle = () => {
+    if (!hasBreakdown) {
+      if (availableMetrics.length > 1) {
+        return 'Multiple Metrics Comparison'
+      }
+      return metricLabel
+    }
+    if (!breakdownType) return metricLabel
+    return `${metricLabel} by ${breakdownType.charAt(0).toUpperCase() + breakdownType.slice(1)}`
+  }
+
+  const getChartDescription = () => {
+    if (!hasBreakdown) {
+      if (availableMetrics.length > 1) return 'Comparing multiple metrics over time'
+      return `${timeIncrement.charAt(0).toUpperCase() + timeIncrement.slice(1)} ${metricLabel.toLowerCase()} over time`
+    }
+    return `Distribution of ${metricLabel.toLowerCase()} across ${breakdownType} groups`
+  }
+
+  const getFooterText = () => {
+    if (!hasBreakdown) {
+      if (availableMetrics.length > 1) {
+        return 'Multiple metrics comparison'
+      }
+      return `${timeIncrement.charAt(0).toUpperCase() + timeIncrement.slice(1)} ${metricLabel.toLowerCase()}`
+    }
+    return `${metricLabel} by ${breakdownType}`
+  }
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>
-          {hasBreakdown && breakdownType
-            ? `${metricLabel} by ${breakdownType}`
-            : 'Metrics Over Time'}
+          {getChartTitle()}
         </CardTitle>
         <CardDescription>
-          {hasBreakdown && breakdownType
-            ? `Showing ${String(metricLabel).toLowerCase()} breakdown over time`
-            : 'Showing daily metrics'}
+          {getChartDescription()}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -256,15 +295,6 @@ const AreaChartComponent = ({ data }: AreaChartProps) => {
           </AreaChart>
         </ChartContainer>
       </CardContent>
-      <CardFooter>
-        <div className="flex w-full items-start gap-2 text-sm">
-          <div className="grid gap-2">
-            <div className="flex items-center gap-2 leading-none text-muted-foreground">
-              {hasBreakdown ? `${metricLabel} by ${breakdownType}` : 'Daily Metrics'}
-            </div>
-          </div>
-        </div>
-      </CardFooter>
     </Card>
   )
 }

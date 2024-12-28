@@ -76,6 +76,7 @@ const MetaDataResults = () => {
       <ResultsAlert status={formResult.status} message={formResult.message} />
       {formResult.status === 'success' && formResult.data && (
         <div className="space-y-4">
+          <AreaChart data={formattedData} />
           <div>
             <h3 className="mb-2 font-medium">API Query</h3>
             <pre className="max-h-[200px] overflow-auto rounded-lg border bg-muted p-4 text-sm">
@@ -94,7 +95,6 @@ const MetaDataResults = () => {
               {JSON.stringify(formattedData, null, 2)}
             </pre>
           </div>
-          <AreaChart data={formattedData} />
         </div>
       )}
     </div>
