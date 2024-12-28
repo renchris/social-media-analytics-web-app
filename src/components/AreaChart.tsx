@@ -18,67 +18,162 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from '@components/ui/chart'
+import { MetricType } from '@lib/meta'
 
 interface FormattedMetricData {
   date_start: string
   date_stop: string
-  impressions?: number
-  female_impressions?: number
-  male_impressions?: number
-  unknown_impressions?: number
+  [key: string]: string | number | undefined
 }
 
 interface AreaChartProps {
   data: FormattedMetricData[]
 }
 
-const genderChartConfig = {
-  male_impressions: {
-    label: 'Male',
-    color: 'hsl(var(--chart-1))',
-  },
-  female_impressions: {
-    label: 'Female',
-    color: 'hsl(var(--chart-2))',
-  },
-  unknown_impressions: {
-    label: 'Unknown',
-    color: 'hsl(var(--chart-3))',
-  },
-} satisfies ChartConfig
+const breakdownColors = {
+  male: 'hsl(var(--chart-1))',
+  female: 'hsl(var(--chart-2))',
+  unknown: 'hsl(var(--chart-3))',
+  '13-17': 'hsl(var(--chart-1))',
+  '18-24': 'hsl(var(--chart-2))',
+  '25-34': 'hsl(var(--chart-3))',
+  '35-44': 'hsl(var(--chart-4))',
+  '45-54': 'hsl(var(--chart-5))',
+  '55-64': 'hsl(var(--chart-6))',
+  '65+': 'hsl(var(--chart-7))',
+}
 
-const baseChartConfig = {
-  impressions: {
-    label: 'Impressions',
-    color: 'hsl(var(--chart-1))',
-  },
-} satisfies ChartConfig
+const breakdownLabels = {
+  male: 'Male',
+  female: 'Female',
+  unknown: 'Unknown',
+  '13-17': '13-17',
+  '18-24': '18-24',
+  '25-34': '25-34',
+  '35-44': '35-44',
+  '45-54': '45-54',
+  '55-64': '55-64',
+  '65+': '65+',
+}
+
+const metricColors = {
+  impressions: 'hsl(var(--chart-1))',
+  spend: 'hsl(var(--chart-2))',
+  clicks: 'hsl(var(--chart-3))',
+  ctr: 'hsl(var(--chart-4))',
+  conversions: 'hsl(var(--chart-5))',
+  cost_per_conversion: 'hsl(var(--chart-6))',
+  conversion_rate: 'hsl(var(--chart-7))',
+}
+
+const metricLabels = {
+  impressions: 'Impressions',
+  spend: 'Spend ($)',
+  clicks: 'Clicks',
+  ctr: 'Click-through Rate',
+  conversions: 'Conversions',
+  cost_per_conversion: 'Cost per Conversion ($)',
+  conversion_rate: 'Conversion Rate',
+}
+
+const formatMetricValue = (metric: MetricType, value: number) => {
+  switch (metric) {
+    case 'spend':
+    case 'cost_per_conversion':
+      return `$${value.toFixed(2)}`
+    case 'ctr':
+    case 'conversion_rate':
+      return `${value.toFixed(2)}%`
+    default:
+      return value.toLocaleString()
+  }
+}
+
+const breakdownOrders = {
+  gender: ['unknown', 'female', 'male'],
+  age: ['65+', '55-64', '45-54', '35-44', '25-34', '18-24', '13-17'],
+}
+
+const getBreakdownChartConfig = (metric: MetricType, breakdownKeys: string[]) => {
+  const isAgeBreakdown = breakdownKeys.some((key) => key.includes('-') || key === '65+')
+  const orderArray = isAgeBreakdown ? breakdownOrders.age : breakdownOrders.gender
+  const sortedBreakdownKeysByOrder = [...breakdownKeys].sort((a, b) => {
+    const aIndex = orderArray.indexOf(a)
+    const bIndex = orderArray.indexOf(b)
+    if (aIndex === -1 && bIndex === -1) return 0
+    if (aIndex === -1) return 1
+    if (bIndex === -1) return -1
+    return aIndex - bIndex
+  })
+
+  return Object.fromEntries(
+    sortedBreakdownKeysByOrder.map((key) => [
+      `${key}_${metric}`,
+      {
+        label: breakdownLabels[key as keyof typeof breakdownLabels] || key,
+        color: breakdownColors[key as keyof typeof breakdownColors] || 'hsl(var(--chart-1))',
+      },
+    ]),
+  ) as ChartConfig
+}
+
+const getBaseChartConfig = (metrics: MetricType[]) => Object.fromEntries(
+  metrics.map((metric) => [
+    metric,
+    {
+      label: metricLabels[metric],
+      color: metricColors[metric],
+    },
+  ]),
+) as ChartConfig
+
+const getMetricLabel = (metric: MetricType | undefined) => {
+  if (!metric) return 'Metrics'
+  return metricLabels[metric] || metric
+}
 
 const AreaChartComponent = ({ data }: AreaChartProps) => {
-  const hasGenderData = data.length > 0
-    && (data[0].female_impressions !== undefined
-     || data[0].male_impressions !== undefined
-     || data[0].unknown_impressions !== undefined)
+  if (!data || data.length === 0) {
+    return null
+  }
 
-  const chartConfig = hasGenderData ? genderChartConfig : baseChartConfig
+  const allKeys = Object.keys(data[0]).filter((key) => !['date_start', 'date_stop'].includes(key))
+  const hasBreakdown = allKeys.some((key) => key.includes('_'))
 
-  // Calculate max value for Y axis
-  const maxValue = data.reduce((max, item) => {
-    if (hasGenderData) {
-      const total = (item.male_impressions || 0)
-                   + (item.female_impressions || 0)
-                   + (item.unknown_impressions || 0)
-      return Math.max(max, total)
-    }
-    return Math.max(max, item.impressions || 0)
-  }, 0)
+  const breakdownKeys = hasBreakdown
+    ? allKeys
+      .filter((key) => key.includes('_'))
+      .map((key) => key.split('_')[0])
+      .filter((value, index, self) => self.indexOf(value) === index)
+    : []
+
+  const availableMetrics = (hasBreakdown
+    ? allKeys
+      .filter((key) => key.includes('_'))
+      .map((key) => key.split('_')[1])
+      .filter((value, index, self) => self.indexOf(value) === index)
+    : allKeys) as MetricType[]
+
+  const chartConfig = hasBreakdown
+    ? getBreakdownChartConfig(availableMetrics[0], breakdownKeys)
+    : getBaseChartConfig(availableMetrics)
+
+  const baseMetric = availableMetrics[0]
+  const metricLabel = getMetricLabel(baseMetric)
+  const breakdownType = breakdownKeys[0]
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{hasGenderData ? 'Gender Breakdown' : 'Impressions Over Time'}</CardTitle>
+        <CardTitle>
+          {hasBreakdown && breakdownType
+            ? `${metricLabel} by ${breakdownType}`
+            : 'Metrics Over Time'}
+        </CardTitle>
         <CardDescription>
-          {hasGenderData ? 'Showing impressions by gender over time' : 'Showing daily impressions'}
+          {hasBreakdown && breakdownType
+            ? `Showing ${String(metricLabel).toLowerCase()} breakdown over time`
+            : 'Showing daily metrics'}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -116,28 +211,48 @@ const AreaChartComponent = ({ data }: AreaChartProps) => {
               tickMargin={8}
             />
             <YAxis
-              domain={[0, maxValue]}
               tickLine={false}
               axisLine={false}
               tickMargin={8}
+              tickFormatter={(value) => formatMetricValue(baseMetric, value)}
             />
+            {!hasBreakdown && availableMetrics.length > 1
+              && availableMetrics.slice(1).map((metric) => (
+                <YAxis
+                  key={metric}
+                  yAxisId={metric}
+                  orientation="right"
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={8}
+                  tickFormatter={(value) => formatMetricValue(metric, value)}
+                />
+              ))}
             <Legend />
             <ChartTooltip
               cursor={false}
               content={<ChartTooltipContent indicator="dot" />}
             />
-            {Object.entries(chartConfig).reverse().map(([key, config]) => (
-              <Area
-                key={key}
-                dataKey={key}
-                name={config.label}
-                type="monotone"
-                fill={`url(#fill${key})`}
-                fillOpacity={0.4}
-                stroke={`var(--color-${key})`}
-                stackId={hasGenderData ? 'a' : undefined}
-              />
-            ))}
+            {Object.entries(chartConfig).map(([key, config]) => {
+              const metric = !hasBreakdown ? key as MetricType : key.split('_')[1] as MetricType
+              const yAxisProps = !hasBreakdown && metric !== availableMetrics[0]
+                ? { yAxisId: metric }
+                : {}
+
+              return (
+                <Area
+                  key={key}
+                  dataKey={key}
+                  name={String(config.label)}
+                  type="monotone"
+                  fill={`url(#fill${key})`}
+                  fillOpacity={0.4}
+                  stroke={`var(--color-${key})`}
+                  stackId={hasBreakdown ? 'a' : undefined}
+                  {...yAxisProps}
+                />
+              )
+            })}
           </AreaChart>
         </ChartContainer>
       </CardContent>
@@ -145,7 +260,7 @@ const AreaChartComponent = ({ data }: AreaChartProps) => {
         <div className="flex w-full items-start gap-2 text-sm">
           <div className="grid gap-2">
             <div className="flex items-center gap-2 leading-none text-muted-foreground">
-              {hasGenderData ? 'Distribution by Gender' : 'Daily Impressions'}
+              {hasBreakdown ? `${metricLabel} by ${breakdownType}` : 'Daily Metrics'}
             </div>
           </div>
         </div>
